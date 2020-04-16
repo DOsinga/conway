@@ -1,11 +1,11 @@
-var ColorHelper = (function () {
-    function ColorHelper() {
+var Cell = (function () {
+    function Cell() {
     }
-    ColorHelper.getColorVector = function (c) {
-        return createVector(red(c), green(c), blue(c));
-    };
-    ColorHelper.rainbowColorBase = function () {
-        return [
+    return Cell;
+}());
+var World = (function () {
+    function World(width, height, cell_count) {
+        this.colors = [
             color('red'),
             color('orange'),
             color('yellow'),
@@ -14,78 +14,52 @@ var ColorHelper = (function () {
             color('indigo'),
             color('violet')
         ];
-    };
-    ColorHelper.getColorsArray = function (total, baseColorArray) {
-        var _this = this;
-        if (baseColorArray === void 0) { baseColorArray = null; }
-        if (baseColorArray == null) {
-            baseColorArray = ColorHelper.rainbowColorBase();
+        this.colorCount = this.colors.length;
+        this.width = width;
+        this.height = height;
+        for (var x = 0; x < width; x++) {
+            this.grid[x] = [];
+            for (var y = 0; y < height; y++) {
+                this.grid[x][y] = null;
+            }
         }
-        var rainbowColors = baseColorArray.map(function (x) { return _this.getColorVector(x); });
-        ;
-        var colours = new Array();
-        for (var i = 0; i < total; i++) {
-            var colorPosition = i / total;
-            var scaledColorPosition = colorPosition * (rainbowColors.length - 1);
-            var colorIndex = Math.floor(scaledColorPosition);
-            var colorPercentage = scaledColorPosition - colorIndex;
-            var nameColor = this.getColorByPercentage(rainbowColors[colorIndex], rainbowColors[colorIndex + 1], colorPercentage);
-            colours.push(color(nameColor.x, nameColor.y, nameColor.z));
+        this.cells = [];
+        for (var i = 0; i < cell_count; i++) {
+            while (true) {
+                var x = Math.floor(Math.random() * width);
+                var y = Math.floor(Math.random() * height);
+                if (this.grid[x][y] === null) {
+                    var c = { color: Math.floor(Math.random() * this.colorCount),
+                        curX: x,
+                        curY: y };
+                    this.grid[x][y] = c;
+                    this.cells.push(c);
+                    break;
+                }
+            }
         }
-        return colours;
-    };
-    ColorHelper.getColorByPercentage = function (firstColor, secondColor, percentage) {
-        var firstColorCopy = firstColor.copy();
-        var secondColorCopy = secondColor.copy();
-        var deltaColor = secondColorCopy.sub(firstColorCopy);
-        var scaledDeltaColor = deltaColor.mult(percentage);
-        return firstColorCopy.add(scaledDeltaColor);
-    };
-    return ColorHelper;
-}());
-var Shapes = (function () {
-    function Shapes() {
     }
-    Shapes.star = function (x, y, radius1, radius2, npoints) {
-        var angle = TWO_PI / npoints;
-        var halfAngle = angle / 2.0;
-        var points = new Array();
-        for (var a = 0; a < TWO_PI; a += angle) {
-            var sx = x + cos(a) * radius2;
-            var sy = y + sin(a) * radius2;
-            points.push(createVector(sx, sy));
-            sx = x + cos(a + halfAngle) * radius1;
-            sy = y + sin(a + halfAngle) * radius1;
-            points.push(createVector(sx, sy));
-        }
-        return points;
-    };
-    return Shapes;
+    return World;
 }());
-var angle = 0;
-var squares = 10;
-var colors;
+var frame = 0;
+var CELLS_PER_SIDE = 10;
+var world = new World(CELLS_PER_SIDE, CELLS_PER_SIDE, 10);
 function setup() {
     createCanvas(windowWidth, windowHeight);
-    rectMode(CENTER);
-    colors = ColorHelper.getColorsArray(squares);
 }
 function draw() {
+    frame += 1;
     background(51);
-    translate((width / 2), (height / 2));
-    angle = angle + 0.01;
-    rotate(angle);
-    for (var i = 0; i < squares; i++) {
-        strokeWeight(2);
-        stroke(colors[i]);
-        noFill();
-        beginShape();
-        var points = Shapes.star(0, 0, 10 * i, 20 * i, 5);
-        for (var x = 0; x < points.length; x++) {
-            var v = points[x];
-            vertex(v.x, v.y);
-        }
-        endShape(CLOSE);
+    var side = min(width, height);
+    var cell_size = side / CELLS_PER_SIDE;
+    var x_offs = (width - side + cell_size) / 2;
+    var y_offs = (height - side + cell_size) / 2;
+    noStroke();
+    console.log(world);
+    for (var _i = 0, _a = world.cells; _i < _a.length; _i++) {
+        var cell = _a[_i];
+        fill(cell.color);
+        circle(x_offs + cell.curX * cell_size, y_offs + cell.curY * cell_size, cell_size * 0.9);
     }
 }
 //# sourceMappingURL=build.js.map

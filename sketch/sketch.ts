@@ -1,33 +1,51 @@
-let angle = 0;
-let squares = 10;
-let colors: p5.Color[];
+/// <reference path="World.ts" />
 
-function setup() {
-    createCanvas(windowWidth, windowHeight);
-    rectMode(CENTER);
-    colors = ColorHelper.getColorsArray(squares);
-}
+var sketch = (p: p5) => {
+  const CELLS_PER_SIDE = 80;
 
-function draw() {
+  let world: World;
 
-    background(51);
+  p.setup = function () {
+    p.createCanvas(720, 720);
+    const cellCount = Math.round(CELLS_PER_SIDE * CELLS_PER_SIDE / 3);
+    const hash = window.location.hash.substr(1);
+    const colors = [
+      p.color('red'),
+      p.color('orange'),
+      p.color('yellow'),
+      p.color('green'),
+      p.color(38, 58, 150), // blue
+      p.color('indigo'),
+      p.color('violet')
+    ];
+    world = new World(
+        CELLS_PER_SIDE,
+        CELLS_PER_SIDE,
+        cellCount,
+        hash,
+        colors);
+    window.location.hash = world.hash;
+  };
 
-    translate((width / 2), (height / 2));
-    angle = angle + 0.01;
-    rotate(angle);
+  p.draw = function () {
+    world.tick();
+    p.background(51);
 
-    for (var i = 0; i < squares; i++) {
-        strokeWeight(2);
-        stroke(colors[i]);
-        noFill();
-        beginShape();
+    const side = p.min(p.width, p.height);
+    const cell_size = side / CELLS_PER_SIDE;
+    const x_offs = (p.width - side + cell_size) / 2;
+    const y_offs = (p.height - side + cell_size) / 2;
 
-        let points = Shapes.star(0, 0, 10 * i, 20 * i, 5);
-        for (var x = 0; x < points.length; x++) {
-            var v = points[x]
-            vertex(v.x, v.y);
-        }
-        endShape(CLOSE);
+    p.noStroke();
+
+    for (let cell of world.cells) {
+      p.fill(world.colorForCell(cell));
+      p.circle(x_offs + cell.curX * cell_size,
+          y_offs + cell.curY * cell_size,
+          cell_size * 0.7);
     }
+  }
+};
 
-}
+const container = window.document.getElementById('container');
+new p5(sketch, container);

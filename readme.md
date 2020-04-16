@@ -1,82 +1,26 @@
-# Starter Project 
-## p5.js with Typescript
-Project to quickly get something working in [p5.js](https://p5js.org/) and [typescript](https://www.typescriptlang.org/)
+# Conway
+
+A tribute to [John Conway](https://en.wikipedia.org/wiki/John_Horton_Conway),
+the inventor of [Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life). 
+The cellular automation the cells canmove to the fields next door 
+and are governed by a random matrix of attraction.
 
 ## Getting Started
 
-### Installing
+Clone the repository and run
 
-```
-git clone https://github.com/Gaweph/p5-typescript-starter.git
-```
 ```
 npm install
-```
-
-### Usage
-
-```
 npm start
 ```
-A local version will now be running on [localhost:3000](http://localhost:3000)
 
-## Demo
+... and you are good to go. A local version will now be running 
+on [localhost:3000](http://localhost:3000)
 
-A demo of the default sketch can be found here:
+The hash bit of the url determines which genes are being run. You
+can copy something you like and keep it for later.
 
-[p5-typescript-starter](https://gaweph.github.io/p5-typescript-starter/)
+## Generate new patterns
 
-![Demo](p5-typescript-demo.png?raw=true "Demo")
-
-this is based on the [morph](https://processing.org/examples/morph.html) sketch available in the p5js examples
-
-## Global and Instanced mode
-P5 is able to run in either global or instanced mode.
-https://github.com/processing/p5.js/wiki/Global-and-instance-mode
-
-This starter project now uses **Global mode** to bring it inline with most of the online resources provided by the project.
-
-As stated on the P5 wiki:
-> While this is convenient (and friendlier) it's important to note that this can lead to problems and confusion down the road when mixing other JS libraries or trying to embed multiple p5 sketches on the same page. A safer, more advanced methodology is to create a p5 sketch as an object "instance".
-
-The following examples are both functionaly the same.
-
-
-### Global Mode
-
-``` typescript
-let x = 100;
-let y = 100;
-
-function setup() {
-  createCanvas(windowWidth,windowHeight);
-}
-
-function draw() {
-  background(0);
-  fill(255);
-  rect(x,y,50,50);
-}
-```
-
-### Instanced Mode
-``` typescript
-var sketch = (p: p5) => {
-    this.x = 100;
-    this.y = 100;
-    p.setup = () => {
-        p.createCanvas(p.windowWidth, p.windowHeight);
-    }
-
-    p.draw = () => {
-        p.background(0);
-        p.fill(255);
-        p.rect(this.x,this.y,50,50);
-    }
-}
-
-new p5(sketch);
-```
-
-
-This starter project will work with either mode, feel free to experiment with both.
+You can use the `generate_patterns.py` to print some interesting
+patterns.
