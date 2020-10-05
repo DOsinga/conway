@@ -1,18 +1,19 @@
 {
-  "name": "p5-typescript-starter",
-  "version": "1.0.0",
-  "description": "Project to quickly get something working in [p5.js](https://p5js.org/) and [typescript](https://www.typescriptlang.org/)",
+  "name": "conway",
+  "version": "0.1.0",
+  "description": "Animation of an cellular automata",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "run-p start-compile start-run",
     "start-compile": "tsc --watch",
     "start-run": "browser-sync start --server -w"
   },
-  "homepage": "https://github.com/Gaweph/p5-typescript-starter#readme",
-  "devDependencies": {
+  "homepage": "https://github.com/DOsinga/conway",
+  "dependencies": {
     "@types/p5": "^0.9.0",
     "npm-run-all": "^4.1.5",
     "browser-sync": "^2.26.7",
-    "typescript": "^3.6.3"
+    "typescript": "^3.6.3",
+    "ts-node": "^8.9.0"
   }
 }

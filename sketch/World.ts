@@ -8,12 +8,24 @@ class Cell {
   curY: number;
 }
 
+const TEMP_DECAY = 0.002;
+
 class World {
   DIRECTIONS = [
     [1, 0],
     [0, 1],
     [-1, 0],
     [0, -1],
+  ];
+  DIRECTIONS_MEDIUM = [
+    [1, 0],
+    [0, 1],
+    [-1, 0],
+    [0, -1],
+    [1, 1],
+    [-1, 1],
+    [1, -1],
+    [-1, -1]
   ];
   DIRECTIONS_FAR = [
     [1, 1],
@@ -31,7 +43,7 @@ class World {
 
   static HASH_CHARS = '!@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-  colors : p5.Color[];
+  colors : any[];
   width: number;
   height: number;
   grid : Cell[][];
@@ -43,7 +55,7 @@ class World {
   hash: string;
   temperature: number;
 
-  constructor(width: number, height: number, cell_count: number, hash: string, colors: p5.Color[]) {
+  constructor(width: number, height: number, cell_count: number|string, hash: string, colors: any[]) {
     this.width = width;
     this.height = height;
     this.colors = colors;
@@ -70,17 +82,33 @@ class World {
     this.colorGenes = this.hashToGenes(this.hash);
 
     this.cells = [];
-    for (let i = 0; i < cell_count; i++) {
-      while (true) {
-        const x = Math.floor(Math.random() * width);
-        const y = Math.floor( Math.random() * height);
-        if (this.grid[x][y] === null) {
-          const c = {type: Math.floor(Math.random() * this.colorCount),
-            x:x, nextX: x, curX: x,
-            y:y, nextY: y, curY: y};
-          this.grid[x][y] = c;
-          this.cells.push(c);
-          break;
+    if(typeof cell_count == 'number'){
+      for (let i = 0; i < cell_count; i++) {
+        while (true) {
+          const x = Math.floor(Math.random() * width);
+          const y = Math.floor( Math.random() * height);
+          if (this.grid[x][y] === null) {
+            const c = {type: Math.floor(Math.random() * this.colorCount),
+              x:x, nextX: x, curX: x,
+              y:y, nextY: y, curY: y};
+            this.grid[x][y] = c;
+            this.cells.push(c);
+            break;
+          }
+        }
+      }
+    } else {
+      this.temperature = 0;
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+          const type = cell_count.charCodeAt(x + y * width) - 48;
+          if (type >= 0 && type < this.colorCount) {
+            const c = {type: type,
+              x:x, nextX: x, curX: x,
+              y:y, nextY: y, curY: y};
+            this.grid[x][y] = c;
+            this.cells.push(c);
+          }
         }
       }
     }
@@ -91,30 +119,26 @@ class World {
     return this.colors[cell.type];
   }
 
-  private coordInRange(x1: number, y1: number) {
-    return x1 >= 0 && x1 < this.width && y1 >= 0 && y1 < this.height;
+  private gridMod(x: number, y: number, value?: Cell) {
+    x = (x + this.width) % this.width;
+    y = (y + this.height) % this.height;
+    if (value !== undefined) {
+      this.grid[x][y] = value;
+    }
+    return this.grid[x][y];
   }
 
-  neighbors(x: number, y: number, near: boolean) {
-    let res : [number, number][] = [];
-    const src = near ? this.DIRECTIONS : this.DIRECTIONS_FAR;
-    for (const [dx, dy] of src) {
-      const x1 = x + dx;
-      const y1 = y + dy;
-      if (this.coordInRange(x1, y1)) {
-        res.push([x1, y1])
-      }
-    }
-    return res;
+  neighbors(x: number, y: number, src: number[][]) {
+    return src.map(el => [x + el[0], y + el[1]]);
   }
 
   openAt(x: number, y: number) {
-    return this.neighbors(x, y, true).filter(p => this.grid[p[0]][p[1]] == null);
+    return this.neighbors(x, y, this.DIRECTIONS).filter(p => this.gridMod(p[0],p[1]) == null);
   }
 
-  cellsAround(x: number, y: number, near: boolean) {
-    const xy = this.neighbors(x, y, near);
-    return xy.map(p => this.grid[p[0]][p[1]]);
+  cellsAround(x: number, y: number, src: number[][]) {
+    const xy = this.neighbors(x, y, src);
+    return xy.map(p => this.gridMod(p[0], p[1]));
   }
 
   private static scoreClustering(around: Cell[], cell: Cell) {
@@ -144,40 +168,39 @@ class World {
     return score;
   }
 
-  public tick() {
-    this.temperature *= 0.999;
-    if (this.temperature < 0.01) {
+  public tick(skipInterpolation = false) {
+    this.temperature *= (1 - TEMP_DECAY);
+    if (this.temperature < TEMP_DECAY * 10) {
       this.temperature = 0;
     }
     this.ticksLeftInIteration -= 1;
     const fraction = this.ticksLeftInIteration / this.iterationTicks;
+    let cellsMoved = -1;
     for (let cell of this.cells) {
-      if (this.ticksLeftInIteration === 0) {
-        cell.curX = cell.x = cell.nextX;
-        cell.curY = cell.y = cell.nextY;
+      if (this.ticksLeftInIteration === 0 || skipInterpolation) {
+        cell.nextX = cell.curX = cell.x = (cell.nextX + this.width) % this.width;
+        cell.nextY = cell.curY = cell.y = (cell.nextY + this.height) % this.height;
         const open = this.openAt(cell.x, cell.y);
         if (open.length > 0) {
           let nextX = cell.x;
           let nextY = cell.y;
-          this.grid[cell.nextX][cell.nextY] = null;
+          this.gridMod(cell.nextX, cell.nextY, null);
           open.unshift([cell.x, cell.y]);
           let hiScore = 0;
           for(const [x, y] of open) {
-            const around_near = this.cellsAround(x, y, true);
-            const around_far = this.cellsAround(x, y, false);
-            const score = this.scoreGenes(around_near, cell) + this.scoreGenes(around_far, cell) * this.temperature;
+            const score = this.scorePositionForCell(x, y, cell);
             if (score > hiScore) {
               hiScore = score;
-              if (nextX != x && nextY != y) {
-                const xxx = nextX;
-              }
               nextX = x;
               nextY = y;
             }
           }
+          if (nextX != cell.x || nextY != cell.y) {
+            cellsMoved = cellsMoved == -1 ? 1 : cellsMoved + 1;
+          }
           cell.nextX = nextX;
           cell.nextY = nextY;
-          this.grid[cell.nextX][cell.nextY] = cell;
+          this.gridMod(cell.nextX, cell.nextY, cell);
         }
       } else {
         cell.curX = cell.x * fraction + cell.nextX * (1 - fraction);
@@ -187,6 +210,30 @@ class World {
     if (this.ticksLeftInIteration === 0) {
       this.iterationTicks = Math.round(this.TICKS_PER_STEP / (1 + this.temperature));
       this.ticksLeftInIteration = this.iterationTicks;
+    }
+    return cellsMoved;
+  }
+
+  private scorePositionForCell(x: number, y: number, cell: Cell) {
+    if (this.colorCount == 1) {
+      let count = 0;
+      for (const other of this.cellsAround(x, y, this.DIRECTIONS_MEDIUM)) {
+        if (other !== null) {
+          count += 1;
+        }
+      }
+      if (count == 2) {
+        return 3;
+      } else if (count == 3) {
+        return 2;
+      } else if (count == 1) {
+        return 0;
+      }
+      return 0
+    } else {
+      const aroundNear = this.cellsAround(x, y, this.DIRECTIONS);
+      const aroundFar = this.cellsAround(x, y, this.DIRECTIONS_FAR);
+      return this.scoreGenes(aroundNear, cell) + this.scoreGenes(aroundFar, cell) * this.temperature;
     }
   }
 

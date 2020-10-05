@@ -23,4 +23,5 @@ can copy something you like and keep it for later.
 ## Generate new patterns
 
 You can use the `generate_patterns.py` to print some interesting
-patterns.
+patterns. Add the string it prints out next to the name as the hash 
+of the url to see it play out. 
