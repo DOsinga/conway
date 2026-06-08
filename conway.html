@@ -1,0 +1,44 @@
+<script type="text/markdown" id="info">
+name: Conway
+description: >
+  A tribute to John Conway, the inventor of the Game of Life. In this cellular automaton,
+  cells can move to adjacent fields and are governed by a random matrix of attraction.
+type: alife
+github: conway
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/p5.min.js"></script>
+
+<b>Hello world</b>
+<p>
+    Each cell in the grid is either empty or has a color. A colored cell can move to an
+    empty slot or stays where it is. Each color has a list of preferences for what it wants
+    to be next to, so if there are 7 colors, this list has 8 elements, the first one indicating
+    the preference for being next to an empty cell and the other 7 of how much it likes to be
+    next to each of the colors:
+</p>
+
+<script>
+    var INPUT_WIDTH = {{ size }};
+</script>
+
+<div id="container" class="media-container"></div>
+<script src="{{ static }}build.js"></script>
+
+<p>
+    When you load the page a random set of preferences is generated and the hash of the page
+    is set to encode that preference. This makes it possible to keep track of interesting
+    configurations.
+</p>
+
+{% for entry in entries %}
+    <section style="padding: 0">
+        <a class="thumb" href="#{{ entry.hash }}" style="flex: 0 0 240px; background-image: url('{{ entry.screenshot }}')"></a>
+        <article class="section-article">
+            <h2><a href="#{{ entry.hash }}">{{ entry.title }}</a></h2>
+            <p>
+                {{ entry.description|safe }}
+            </p>
+        </article>
+    </section>
+{% endfor %}
