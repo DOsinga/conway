@@ -5,6 +5,12 @@ the inventor of [Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_
 The cellular automation the cells canmove to the fields next door 
 and are governed by a random matrix of attraction.
 
+Run the project locally with:
+
+```bash
+uvx douwe conway
+```
+
 ## Getting Started
 
 Clone the repository and run
